@@ -1,0 +1,124 @@
+telegram:
+
+   automation:   
+      
+        - id: send_report
+          alias: Запрос на отчет
+          initial_state: true
+          trigger:
+          - platform: event
+            event_type: telegram_callback
+            event_data:
+              data: '/report_S'
+          action:
+           - service: script.turn_on
+             entity_id: 
+                - script.system_report
+
+        - id: send_report_balkon
+          alias: Запрос на отчет по балкону
+          initial_state: true
+          trigger:
+          - platform: event
+            event_type: telegram_callback
+            event_data:
+              data: '/report_B'
+          action:
+           - service: script.turn_on
+             entity_id: 
+                - script.send_message_1
+                
+        - id: send_shop_list
+          alias: Отправить список покупок
+          initial_state: true
+          trigger:
+          - platform: event
+            event_type: telegram_callback
+            event_data:
+              data: '/list'
+          action:
+            - service: notify.telegram_gr
+              data:
+                title: "*Вот список покупок:*"
+                message: |
+                  ➖➖➖➖➖➖➖➖➖➖➖➖  
+                  {{ states('sensor.shopping_list') }}
+
+        - id: send_light_red
+          alias: Переключить красный свет
+          initial_state: true
+          trigger:
+          - platform: event
+            event_type: telegram_callback
+            event_data:
+              data: '/light_R'
+          action:
+           - service: switch.toggle
+             entity_id: 
+                - switch.sonoff_100086c57d_2
+           - delay: 00:00:02
+           - service: notify.telegram_gr
+             data:
+               message: "Красный свет переключен в состояние {{ states ('switch.sonoff_100086c57d_2') }}"
+
+        - id: send_photo
+          alias: Отправить фото
+          initial_state: true
+          trigger:
+          - platform: event
+            event_type: telegram_callback
+            event_data:
+              data: '/photo'
+          action:
+           - service: script.photo_sonoff
+             entity_id: 
+                - script.photo_sonoff
+           
+        - id: send_video
+          alias: Отправить видео
+          initial_state: true
+          trigger:
+          - platform: event
+            event_type: telegram_callback
+            event_data:
+              data: '/video'
+          action:
+           - service: script.video_sonoff
+             entity_id: 
+                - script.video_sonoff
+                
+        - id: GEO_Alex
+          alias: Сообщить где Алексей
+          initial_state: true
+          trigger:
+            platform: event
+            event_type: telegram_callback
+            event_data:
+               data: '/geo_A'
+          action:
+          - service: notify.telegram_gr
+            data:
+              message: |
+                Алексей сейчас здесь
+                ➖➖➖➖➖➖➖➖➖➖➖➖
+                Адрес: {{ states ('sensor.alex_track_adr') }}
+                Заряд батареи: {{ states ('sensor.alex_track_bl') }}
+                Ссылка на карту: https://www.google.ru/maps/place/{{ states.person.oleksii.attributes.latitude }}+{{ states.person.oleksii.attributes.longitude }}
+                {{"\U000023F0"}}  {{ states.sensor.time.state }}     {{"\U0001F4C6"}}  {{ now().strftime("%d.%m.%Y") }}
+
+        - id: telegram_keyboard
+          alias: Клавиатура телеграмм бота
+          initial_state: true
+          trigger:
+          - platform: event
+            event_type: telegram_command
+            event_data:
+              command: '/start'
+          action:
+          - service: notify.telegram_gr
+            data:
+              message: 'Добро пожаловать в управление Умным домом!'
+              data:
+                inline_keyboard:
+                  - "Система:/report_S, Балкон:/report_B, Фото:/photo, Видео:/video"
+                  - "Фито:/light_R, Покупки:/list, Где Леша?:/geo_A"

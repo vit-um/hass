@@ -7,5 +7,5 @@
 
 <p align="left">
 <a  href="https://github.com/vit-um/hass/wiki" target="_blank" rel="next">
-<img src="120_Home_Assistant_Logo.png"  width="25" height="25" alt="Home Assistant"> How install and setup Home Assistant on Raspberry PI (My Wiki) </a>
+<img src="https://github.com/vit-um/vit-um/blob/main/120_Home_Assistant_Logo.png"  width="25" height="25" alt="Home Assistant"> How install and setup Home Assistant on Raspberry PI (My Wiki) </a>
 </p>

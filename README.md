@@ -3,9 +3,9 @@
 [telegram.yaml](/includes/packages/telegram.yaml)  
 ![telega](/img/telega.jpg)  
 2. Приклад коду автоматичного освітлення приміщення:     
-[light_auto.yaml](/includes/packages/light_auto.yaml)
+[light_auto.yaml](/includes/packages/light_auto.yaml)  
+![light](/img/Auto_light.jpg)  
 При фіксації руху у приміщені датчиком, таймер починає відлік с початку. Вимикання світла виконується по завершенню відліку. В прикладі задається час відліку на таймері 5 хвилин.  
-![light](/img/Auto_light.jpg) 
 
 <p align="left">
 <a  href="https://github.com/vit-um/hass/wiki" target="_blank" rel="next">

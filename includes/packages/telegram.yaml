@@ -154,9 +154,9 @@ telegram:
               message: 'Добро пожаловать в управление умным домом!'
               data:
                 inline_keyboard:
-                  - "Фото:/photo, Видео:/video"
+                  - "📷 Фото:/photo, 📹 Видео:/video"
                   - "Система:/report_S, Балкон:/report_B, Счетчики:/counters"
-                  - "Фито:/light_R, Покупки:/list, Где Леша?:/geo_A"
+                  - "Фито {% if is_state('switch.sonoff_100086c57d_2', 'off')%}{{'🔴'}}{% else %}{{'🟢'}}{% endif %}:/light_R, Покупки:/list, Где Леша?:/geo_A"
 
  
         - id: control_water_heat_end_on

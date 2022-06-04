@@ -1,6 +1,18 @@
 telegram:
 
    automation:   
+        - id: start_message
+          alias: Отчет при запуске системы
+          initial_state: true
+          trigger:   
+             - platform: homeassistant
+               event: start
+          action:          
+             - delay: 00:01:10
+             - service: script.turn_on
+               entity_id: script.system_report
+             - service: light.turn_off
+               entity_id: light.wled
       
         - id: send_report
           alias: Запрос на отчет
@@ -106,6 +118,28 @@ telegram:
                 Ссылка на карту: https://www.google.ru/maps/place/{{ states.person.oleksii.attributes.latitude }}+{{ states.person.oleksii.attributes.longitude }}
                 {{"\U000023F0"}}  {{ states.sensor.time.state }}     {{"\U0001F4C6"}}  {{ now().strftime("%d.%m.%Y") }}
 
+                
+        - id: counters
+          alias: Сообщить показания счетчиков
+          initial_state: true
+          trigger:
+            platform: event
+            event_type: telegram_callback
+            event_data:
+               data: '/counters'
+          action:
+          - service: notify.telegram_gr
+            data:
+              title: '*Показатели счетчиков:*'
+              message: |
+                ➖➖➖➖➖➖➖➖➖➖➖➖
+                ⚡ Электричество день: {{ states ('sensor.electric_day') }} кВтч
+                ⚡ Электричество ночь: {{ states ('sensor.electric_night') }} кВтч
+                🔥 Счетчик газа:  {{ states ('sensor.gas_counter') }} м3
+                🚰 Счетчик воды:  {{ states ('sensor.water_counter') }} м3
+                ➖➖➖➖➖➖➖➖➖➖➖➖
+
+
         - id: telegram_keyboard
           alias: Клавиатура телеграмм бота
           initial_state: true
@@ -113,12 +147,109 @@ telegram:
           - platform: event
             event_type: telegram_command
             event_data:
-              command: '/start'
+              command: '/go'
           action:
           - service: notify.telegram_gr
             data:
-              message: 'Добро пожаловать в управление Умным домом!'
+              message: 'Добро пожаловать в управление умным домом!'
               data:
                 inline_keyboard:
-                  - "Система:/report_S, Балкон:/report_B, Фото:/photo, Видео:/video"
+                  - "Фото:/photo, Видео:/video"
+                  - "Система:/report_S, Балкон:/report_B, Счетчики:/counters"
                   - "Фито:/light_R, Покупки:/list, Где Леша?:/geo_A"
+
+ 
+        - id: control_water_heat_end_on
+          alias: Включение контроля за нагревом воды
+          description: Включение контроля за нагревом воды
+          initial_state: true
+          trigger:
+            - entity_id: input_boolean.water_auto_heat
+              platform: state
+              to: 'on'
+          condition:
+            condition: and
+            conditions:
+                - condition: numeric_state
+                  entity_id: sensor.sonoff_1000bd8c01_power
+                  below: 10
+                - condition: state
+                  entity_id: switch.sonoff_1000bd8c01
+                  state: 'on'
+                - condition: numeric_state
+                  entity_id: sensor.sonoff_1000bd8c01_current
+                  below: 1
+          action:
+            - service: notify.telegram_gr
+              data:
+                title: '*Вода в Бойлере уже горячая!*'
+                message: "Топай мыться прямо сейчас, чтобы я ее не грел заново"
+            - service: input_boolean.turn_off
+              entity_id: input_boolean.water_auto_heat
+          mode: single
+
+
+
+        - id: control_water_heat_end
+          alias: Контроль за нагревом воды
+          description: Контроль за нагревом воды
+          trigger:
+          - platform: template
+            value_template: '{{ (states(''sensor.sonoff_1000bd8c01_current'')|float) < 1 }}'
+          - platform: template
+            value_template: '{{ (states(''sensor.sonoff_1000bd8c01_power'')|float) < 10 }}'
+          condition:
+            condition: and
+            conditions:
+            - condition: state
+              entity_id: input_boolean.water_auto_heat
+              state: 'on'
+            - condition: numeric_state
+              entity_id: sensor.sonoff_1000bd8c01_power
+              below: 10
+            - condition: state
+              entity_id: switch.sonoff_1000bd8c01
+              state: 'on'
+            - condition: numeric_state
+              entity_id: sensor.sonoff_1000bd8c01_current
+              below: 1
+          action:
+          - service: notify.telegram_gr
+            data:
+              title: '*Бойлер нагрел воду до заданныx пределов*'
+              message: "Топай мыться"
+          - service: input_boolean.turn_off
+            entity_id: input_boolean.water_auto_heat
+          mode: single
+
+
+        - id: take_foto_door_open
+          alias: Сделать фото при открытии двери
+          description: Отправка видео при входе домой
+          initial_state: true
+          trigger:
+            - entity_id: binary_sensor.door_contact 
+              platform: state
+              to: 'on'
+          condition:
+            - condition: state
+              entity_id: binary_sensor.motion_occupancy
+              state: 'off'
+              for:
+                minutes: 5
+          action:
+            - service: switch.turn_on
+              entity_id: 
+                - switch.sonoff_1000e7ffae_1
+            - service: switch.turn_on
+              entity_id: 
+                - switch.sonoff_1000e7ffae_2
+            - delay: 0:0:03
+            - service: script.video_sonoff
+              entity_id: 
+                - script.video_sonoff
+            - delay: 0:03:00
+            - service: switch.turn_off
+              entity_id:
+                - switch.sonoff_1000e7ffae_2
+          mode: single

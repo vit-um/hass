@@ -2,8 +2,10 @@
 1. Приклад клавіатури в Телеграм для віддаленого керування домашніми приладами  
 [telegram.yaml](/includes/packages/telegram.yaml)  
 ![telega](/img/telega.jpg)  
-2. Приклад коду автоматичного освітлення приміщення (в розробці):     
+2. Приклад коду автоматичного освітлення приміщення:     
 [light_auto.yaml](/includes/packages/light_auto.yaml)
+При фіксації руху у приміщені датчиком, таймер починає відлік с початку. Вимикання світла виконується по завершенню відліку. В прикладі задається час відліку на таймері 5 хвилин.  
+![light](/img/Auto_light.jpg) 
 
 <p align="left">
 <a  href="https://github.com/vit-um/hass/wiki" target="_blank" rel="next">

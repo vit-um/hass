@@ -1,196 +1,4 @@
-# Автоматизация - Управление выключателем по датчику движения
-light_auto:
 
-# to do
-# добавить в алгоритмы датчики освещенности
-# добавить в алгоритмы датчик открытия двери с пылесосом
-
-# Переключатель автоматического вкл/откл. освещения в помещении
-    input_boolean:
-      auto_light_on_off:
-        name: Auto light on
-    
-# Таймер отключения освещения в помещении (180 секунд)
-    timer:
-      light_turn_off:
-        name: Light turn off timer
-        duration: 90
-
-# Автоматизации
-    automation:
-
-# Действие 1. При включении выключателя автоматики происходит перезапуск таймера отключения освещения, если датчик движения в состоянии off и освещение включено.
-    - id: 'turn_on_auto_light'
-      alias: Auto light on
-      trigger:
-      - platform: state
-        entity_id: input_boolean.auto_light_on_off
-        to: 'on'
-      condition:
-      - condition: state
-        entity_id: binary_sensor.motion_sensor_158d0002e9b4c2  
-        state: 'off'
-      - condition: and
-        conditions:
-        - condition: state
-          entity_id: switch.sonoff_1000e7ffae_1
-          state: 'on'
-      action:
-      - service: timer.cancel
-        entity_id: timer.light_turn_off
-        data: {}
-      - service: timer.start
-        entity_id: timer.light_turn_off
-        data: {}
-        
-# Действие 2. При отключении выключателя автоматики если был запущен таймер отключения, то он отменяется.        
-    - id: 'turn_off_auto_light'
-      alias: Auto light off
-      trigger:
-      - platform: state
-        entity_id: input_boolean.auto_light_on_off
-        to: 'off'
-      condition:
-      - condition: state
-        entity_id: timer.light_turn_off
-        state: active
-      action:
-      - service: timer.cancel
-        entity_id: timer.light_turn_off
-        data: {}
-        
-# Действие 3. При включении освещения с выключателя происходит перезапуск таймера отключения, если выключатель автоматики on и датчик движения off.
-
-    - id: 'turn_on_light'
-      alias: Light turn on
-      trigger:
-      - platform: state
-        entity_id: switch.sonoff_1000e7ffae_1
-        to: 'on'
-      condition:
-      - condition: state
-        entity_id: input_boolean.auto_light_on_off
-        state: 'on'
-      - condition: and
-        conditions:
-        - condition: state
-          entity_id: binary_sensor.motion_sensor_158d0002e9b4c2
-          state: 'off'
-      action:
-      - service: timer.cancel
-        entity_id: timer.light_turn_off
-        data: {}
-      - service: timer.start
-        entity_id: timer.light_turn_off
-        data: {}
-        
-# Действие 4. При отключении освещения с выключателя если был запущен таймер отключения, то он отменяется.
-    - id: 'turn_off_light'
-      alias: Light turn off
-      trigger:
-      - platform: state
-        entity_id: switch.sonoff_1000e7ffae_1
-        to: 'off'
-      condition:
-      - condition: state
-        entity_id: timer.light_turn_off
-        state: active
-      action:
-      - service: timer.cancel
-        entity_id: timer.light_turn_off
-        data: {}
-        
-# Действие 5. При обнаружении движения включается освещение, если выключатель автоматики on и освещение на данный момент выключено.
-    - id: 'turn_on_light_by_motion'
-      alias: Light turn on by motion sensor
-      trigger:
-      - platform: state
-        entity_id: binary_sensor.motion_sensor_158d0002e9b4c2
-        to: 'on'
-      condition:
-      - condition: state
-        entity_id: input_boolean.auto_light_on_off
-        state: 'on'
-      - condition: and
-        conditions:
-        - condition: state
-          entity_id: switch.sonoff_1000e7ffae_1
-          state: 'off'
-        - condition: state
-          entity_id: switch.sonoff_1000e7ffae_2
-          state: 'off'
-        - condition: time
-          after: '07:00:00'
-          before: '23:00:00'
-        - condition: numeric_state
-          entity_id: sensor.illumination_7c49ebb42515
-          below: 500
-      action:
-      - service: switch.turn_on
-        data:
-          entity_id: switch.sonoff_1000e7ffae_1
-
-# Действие 6. При обнаружении движения происходит отмена таймера отключения при его активном текущем состоянии.
-    - id: 'cancel_timer_by_motion'
-      alias: Timer cancel by motion sensor 
-      trigger:
-      - platform: state
-        entity_id: binary_sensor.motion_sensor_158d0002e9b4c2
-        to: 'on'
-      condition:
-      - condition: state
-        entity_id: timer.light_turn_off
-        state: active
-      action:
-      - service: timer.cancel
-        entity_id: timer.light_turn_off
-        data: {}
-# Действие 7. При окончании обнаружения движения датчиком, включенном выключателе автоматики и включенном свете происходит запуск таймера на отключения освещения.
-    - id: 'start_timer_by_motion'
-      alias: Timer start by motion sensor
-      trigger:
-      - platform: state
-        entity_id: binary_sensor.motion_sensor_158d0002e9b4c2
-        to: 'off'
-      condition:
-      - condition: state
-        entity_id: input_boolean.auto_light_on_off
-        state: 'on'
-      - condition: and
-        conditions:
-        - condition: state
-          entity_id: switch.sonoff_1000e7ffae_1
-          state: 'on'
-      action:
-      - service: timer.start
-        entity_id: timer.light_turn_off
-        data: {}
-# Действие 8. При окончании отсчета таймера происходит отключение освещения, если выключатель автоматики on, датчик движения off и освещение включено.
-    - id: 'turn_off_light_by_timer'
-      alias: Timer finished
-      trigger:
-      - platform: event
-        event_type: timer.finished
-        event_data:
-          entity_id: timer.light_turn_off
-      condition:
-      - condition: state
-        entity_id: input_boolean.auto_light_on_off
-        state: 'on'
-      - condition: and
-        conditions:
-        - condition: state
-          entity_id: binary_sensor.motion_sensor_158d0002e9b4c2
-          state: 'off'
-      - condition: and
-        conditions:
-        - condition: state
-          entity_id: switch.sonoff_1000e7ffae_1
-          state: 'on'
-      action:
-      - service: switch.turn_off
-        entity_id: switch.sonoff_1000e7ffae_1
-        data: {}
 
 # Автоматизация - Управление выключателем по датчику движения
 light_auto:
@@ -199,169 +7,200 @@ light_auto:
 # добавить в алгоритмы датчики освещенности
 # добавить в алгоритмы датчик открытия двери с пылесосом
 
-# Переключатель автоматического вкл/откл. освещения в помещении
+# Переключатель автоматического вкл/откл. освещения и вентиляции в помещении
     input_boolean:
       auto_light_on_off:
-        name: Auto light on
+        name: Автоматичне освітлення квартири вночі
+      auto_lotos_light:
+        name: Автоматичний Лотос
+
+
     
 # Таймер отключения освещения в помещении (180 секунд)
     timer:
       light_turn_off:
-        name: Light turn off timer
-        duration: 90
+        name: Таймер ночной подсветки
+        duration: 300
+      lotus_light:
+        name: Таймер автоматичного вимикання лотосу
+        duration: 600
+
+#Раздел со скриптами
+    script:
+      light_all_off:
+        alias: Выключить весь свет в квартире
+        sequence:
+        - service: automation.turn_off
+          entity_id: automation.bra_vkliuchaet_podsvetku_v_detskoi
+        - service: light.turn_off
+          entity_id: all
+        - service: automation.turn_on
+          entity_id: automation.bra_vkliuchaet_podsvetku_v_detskoi
+
+      light_all_off_home:
+        alias: Выключить весь свет в квартире и желтым обозначить охрану
+        sequence:
+        - service: automation.turn_off
+          entity_id: automation.bra_vkliuchaet_podsvetku_v_detskoi
+        - service: light.turn_off
+          entity_id: all
+        - service: automation.turn_on
+          entity_id: automation.bra_vkliuchaet_podsvetku_v_detskoi
+        - service: scene.turn_on
+          entity_id: scene.nova_stsena
+
+      light_police:
+        alias: Включить эффект полиции на 3х светильниках
+        sequence:
+        - service: scene.turn_on
+          entity_id: scene.effekt_politsiia
+        - service: xiaomi_aqara.play_ringtone  
+          data:
+            gw_mac: 7C:49:EB:B4:25:15
+            ringtone_id: 1
+            ringtone_vol: 100   
+        - service: media_player.play_media
+          data_template:
+            entity_id: media_player.pleer
+            media_content_id: http://localhost:8123/local/police_wailer_siren.mp3
+            media_content_type: 'music'      
+
 
 # Автоматизации
     automation:
 
-# Действие 1. При включении выключателя автоматики происходит перезапуск таймера отключения освещения, если датчик движения в состоянии off и освещение включено.
+# Действие 1. Автоматизация Лотоса в Детской. Включить при старте таймера
+    - id: 'turn_on_auto_lotus_light_timer_start'
+      alias: Включение в работу Лотуса по таймеру
+      trigger:
+      - platform: event
+        event_type: timer.started
+        event_data:
+          entity_id: timer.lotus_light
+      - platform: event
+        event_type: timer.restarted
+        event_data:
+          entity_id: timer.lotus_light
+      condition:
+      - condition: state
+        entity_id: input_boolean.auto_lotos_light
+        state: 'on'     
+      action:
+      - service: light.turn_on
+        entity_id: light.child_room_l1
+        data: {}
+
+# Действие 2. Автоматизация Лотоса в Детской. Остановка атоматизации и выключение света
+    - id: 'turn_off_auto_lotus_light_buton'
+      alias: Выключение работы Лотоса кнопками
+      trigger:
+      - platform: state
+        entity_id: input_boolean.auto_lotos_light
+        to: 'off'
+      action:
+      - service: timer.finish
+        entity_id: timer.lotus_light
+        data: {}
+
+
+# Действие 3. Автоматизация Лотоса в Детской. Выключение по таймеру
+    - id: 'turn_off_auto_lotus_light'
+      alias: Выключение работы Лотоса по времени
+      trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.lotus_light
+      condition:
+      - condition: state
+        entity_id: light.child_room_l1  
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.auto_lotos_light
+        state: 'on'     
+      action:
+      - service: light.turn_off
+        entity_id: light.child_room_l1
+        data: {}
+
+# Действие 4. Автоматизация Лотоса в Детской. Рестарт таймера
+    - id: 'turn_off_auto_lotus_light_time'
+      alias: Рестрарт отсчета таймера в случае обнаружения движения
+      trigger:
+      - platform: state
+        entity_id: binary_sensor.54ef44e6c679_motion
+        to: 'on'
+      - platform: state
+        entity_id: input_boolean.auto_lotos_light
+        to: 'on'
+      condition:
+      - condition: state
+        entity_id: input_boolean.auto_lotos_light
+        state: 'on'     
+      - condition: state
+        entity_id: binary_sensor.54ef44e6c679_light
+        state: 'off'     
+      - condition: state
+        entity_id: binary_sensor.54ef44e6c679_motion
+        state: 'on'     
+      action:
+      - service: timer.cancel
+        entity_id: timer.lotus_light
+        data: {}
+      - service: timer.start
+        entity_id: timer.lotus_light
+        data: {}
+
+# Действие 1. Включить подсветку.
     - id: 'turn_on_auto_light'
-      alias: Auto light on
+      alias: Включить ночную подсветку при запуске таймера обратного отсчета
+      initial_state: true
       trigger:
-      - platform: state
-        entity_id: input_boolean.auto_light_on_off
-        to: 'on'
-      condition:
-      - condition: state
-        entity_id: binary_sensor.motion_sensor_158d0002e9b4c2  
-        state: 'off'
-      - condition: and
-        conditions:
-        - condition: state
-          entity_id: switch.sonoff_1000e7ffae_1
-          state: 'on'
-      action:
-      - service: timer.cancel
-        entity_id: timer.light_turn_off
-        data: {}
-      - service: timer.start
-        entity_id: timer.light_turn_off
-        data: {}
-        
-# Действие 2. При отключении выключателя автоматики если был запущен таймер отключения, то он отменяется.        
-    - id: 'turn_off_auto_light'
-      alias: Auto light off
-      trigger:
-      - platform: state
-        entity_id: input_boolean.auto_light_on_off
-        to: 'off'
-      condition:
-      - condition: state
-        entity_id: timer.light_turn_off
-        state: active
-      action:
-      - service: timer.cancel
-        entity_id: timer.light_turn_off
-        data: {}
-        
-# Действие 3. При включении освещения с выключателя происходит перезапуск таймера отключения, если выключатель автоматики on и датчик движения off.
-
-    - id: 'turn_on_light'
-      alias: Light turn on
-      trigger:
-      - platform: state
-        entity_id: switch.sonoff_1000e7ffae_1
-        to: 'on'
+      - platform: event
+        event_type: timer.started
+        event_data:
+          entity_id: timer.light_turn_off
+      - platform: event
+        event_type: timer.restarted
+        event_data:
+          entity_id: timer.light_turn_off
       condition:
       - condition: state
         entity_id: input_boolean.auto_light_on_off
         state: 'on'
-      - condition: and
-        conditions:
-        - condition: state
-          entity_id: binary_sensor.motion_sensor_158d0002e9b4c2
-          state: 'off'
       action:
-      - service: timer.cancel
-        entity_id: timer.light_turn_off
-        data: {}
-      - service: timer.start
-        entity_id: timer.light_turn_off
-        data: {}
-        
-# Действие 4. При отключении освещения с выключателя если был запущен таймер отключения, то он отменяется.
-    - id: 'turn_off_light'
-      alias: Light turn off
-      trigger:
-      - platform: state
-        entity_id: switch.sonoff_1000e7ffae_1
-        to: 'off'
-      condition:
-      - condition: state
-        entity_id: timer.light_turn_off
-        state: active
-      action:
-      - service: timer.cancel
-        entity_id: timer.light_turn_off
-        data: {}
-        
-# Действие 5. При обнаружении движения включается освещение, если выключатель автоматики on и освещение на данный момент выключено.
-    - id: 'turn_on_light_by_motion'
-      alias: Light turn on by motion sensor
-      trigger:
-      - platform: state
-        entity_id: binary_sensor.motion_sensor_158d0002e9b4c2
-        to: 'on'
-      condition:
-      - condition: state
-        entity_id: input_boolean.auto_light_on_off
-        state: 'on'
-      - condition: and
-        conditions:
-        - condition: state
-          entity_id: switch.sonoff_1000e7ffae_1
-          state: 'off'
-        - condition: state
-          entity_id: switch.sonoff_1000e7ffae_2
-          state: 'off'
-        - condition: time
-          after: '07:00:00'
-          before: '23:00:00'
-        - condition: numeric_state
-          entity_id: sensor.illumination_7c49ebb42515
-          below: 500
-      action:
-      - service: switch.turn_on
+      - service: light.turn_on
+        target:
+          entity_id: light.gateway_light_7c49ebb42515
         data:
-          entity_id: switch.sonoff_1000e7ffae_1
-
-# Действие 6. При обнаружении движения происходит отмена таймера отключения при его активном текущем состоянии.
-    - id: 'cancel_timer_by_motion'
-      alias: Timer cancel by motion sensor 
+          brightness: 128
+          rgb_color:
+          - 250
+          - 250
+          - 250
+      - service: select.select_option
+        data:
+          entity_id: select.wled_preset
+          option: Night
+      mode: single
+# Действие 2. Ночная подсветка. Остановка атоматизации и выключение ночной подсветки сбросом таймера
+    - id: 'turn_off_auto_night_light_buton'
+      alias: Остановка атоматизации и выключение ночной подсветки сбросом таймера
+      initial_state: true
       trigger:
       - platform: state
-        entity_id: binary_sensor.motion_sensor_158d0002e9b4c2
-        to: 'on'
-      condition:
-      - condition: state
-        entity_id: timer.light_turn_off
-        state: active
-      action:
-      - service: timer.cancel
-        entity_id: timer.light_turn_off
-        data: {}
-# Действие 7. При окончании обнаружения движения датчиком, включенном выключателе автоматики и включенном свете происходит запуск таймера на отключения освещения.
-    - id: 'start_timer_by_motion'
-      alias: Timer start by motion sensor
-      trigger:
-      - platform: state
-        entity_id: binary_sensor.motion_sensor_158d0002e9b4c2
-        to: 'off'
-      condition:
-      - condition: state
         entity_id: input_boolean.auto_light_on_off
-        state: 'on'
-      - condition: and
-        conditions:
-        - condition: state
-          entity_id: switch.sonoff_1000e7ffae_1
-          state: 'on'
+        to: 'off'
       action:
-      - service: timer.start
+      - service: timer.finish
         entity_id: timer.light_turn_off
         data: {}
-# Действие 8. При окончании отсчета таймера происходит отключение освещения, если выключатель автоматики on, датчик движения off и освещение включено.
-    - id: 'turn_off_light_by_timer'
-      alias: Timer finished
+      mode: single
+
+# Действие 3. Ночная подсветка. Выключение по таймеру
+    - id: 'turn_off_night_light'
+      alias: Выключение ночной подсветки по времени
+      initial_state: true
       trigger:
       - platform: event
         event_type: timer.finished
@@ -369,19 +208,68 @@ light_auto:
           entity_id: timer.light_turn_off
       condition:
       - condition: state
+        entity_id: light.gateway_light_7c49ebb42515
+        state: 'on'
+      - condition: state
+        entity_id: light.wled
+        state: 'on'
+      action:
+      - service: light.turn_off
+        entity_id: light.wled
+      - service: light.turn_off
+        entity_id: light.gateway_light_7c49ebb42515
+      mode: single
+
+# Действие 4. Ночная подсветка. Рестарт таймера по движению или включению автоматизации       
+    - id: 'turn_on_timer_auto_light'
+      alias: Рестарт таймера по движению или включению автоматизации 
+      initial_state: true
+      trigger:
+      - platform: state
+        entity_id: binary_sensor.motion_occupancy  
+        to: 'on'
+      - platform: state
+        entity_id: input_boolean.auto_light_on_off
+        to: 'on'
+      condition:
+      - condition: state
         entity_id: input_boolean.auto_light_on_off
         state: 'on'
-      - condition: and
-        conditions:
-        - condition: state
-          entity_id: binary_sensor.motion_sensor_158d0002e9b4c2
-          state: 'off'
-      - condition: and
-        conditions:
-        - condition: state
-          entity_id: switch.sonoff_1000e7ffae_1
-          state: 'on'
-      action:
-      - service: switch.turn_off
+      - condition: state
+        entity_id: binary_sensor.motion_occupancy  
+        state: 'on'
+      - condition: state
         entity_id: switch.sonoff_1000e7ffae_1
+        state: 'off'
+      - condition: state
+        entity_id: switch.sonoff_1000e7ffae_2
+        state: 'off'
+      - condition: numeric_state
+        entity_id: sensor.illumination_7c49ebb42515
+        below: 400
+      action:
+      - service: timer.cancel
+        entity_id: timer.light_turn_off
+        data: {}
+      - service: timer.start
+        entity_id: timer.light_turn_off
+        data: {}
+      mode: single   
+
+
+# При окончании отсчета таймера происходит отключение подстветки в детской.
+    - id: 'turn_off_led_by_timer'
+      alias: Выключить подсветку в детской по таймеру
+      trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.child
+      condition:
+      - condition: state
+        entity_id: light.sonoff_1000990c0c
+        state: 'on'
+      action:
+      - service: light.turn_off
+        entity_id: light.sonoff_1000990c0c
         data: {}

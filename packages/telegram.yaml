@@ -123,10 +123,16 @@ telegram:
           alias: Сообщить показания счетчиков
           initial_state: true
           trigger:
-            platform: event
+          - platform: event
             event_type: telegram_callback
             event_data:
                data: '/counters'
+          - platform: time
+            at: "19:00:00"
+          condition:
+            condition: template
+            value_template: >
+              {{ now().day == 23 }}  
           action:
           - service: notify.telegram_gr
             data:

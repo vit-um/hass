@@ -1,0 +1,75 @@
+# Сенсоры даты и времени
+- platform: time_date
+  display_options:
+    - 'time'
+    - 'date'
+    - 'date_time'
+    - 'time_date'
+    - 'time_utc'
+
+# Сенсоры состояния системы
+- platform: systemmonitor
+  resources:
+    - type: disk_use_percent
+      arg: /
+    - type: disk_free
+      arg: /
+    - type: memory_free
+    - type: memory_use_percent
+    - type: processor_use
+    - type: processor_temperature
+    - type: last_boot
+    - type: swap_use
+        
+# Сенсор времени с момента перезагрузки  Home Assistant
+- platform: uptime
+  name: online
+
+# Сенсор наявності товарів у списку покупок
+- platform: command_line 
+  name: shopping_list 
+  command: "jq '.[] | select(.complete==false) |.name' .shopping_list.json"
+- platform: command_line 
+  name: shopping_list_number 
+  command: "jq length .shopping_list.json"
+
+# Сенсор лічильника газу у м3
+- platform: template
+  sensors:
+    gas_counter:
+      friendly_name: 'Лічильник газу у м3'
+      value_template: "{{ states('sensor.counter_gas_l3') | float / 100}}"
+      icon_template: mdi:counter
+      unit_of_measurement: 'm³'
+      device_class: gas
+
+# Сенсор лічильника води у м3
+- platform: template
+  sensors:
+    water_counter:
+      friendly_name: 'Лічильник води у м3'
+      value_template: "{{ states('sensor.counter_water_l5') | float / 1000}}"
+      icon_template: mdi:counter
+      unit_of_measurement: 'm³'
+      device_class: gas
+
+# Сенсор лічильника електрики вдень
+- platform: template
+  sensors:
+    electric_day:
+      friendly_name: 'Лічильник електрики день'
+      value_template: "{{ (states('sensor.pokazniki_lichilnika_elektriki_den') | float / 1000 ) | round(1) }}"
+      icon_template: mdi:counter
+      unit_of_measurement: 'kWh'
+      device_class: energy
+# Сенсор лічильника електрики вночі
+- platform: template
+  sensors:
+    electric_night:
+      friendly_name: 'Лічильник електрики ніч'
+      value_template: "{{ (states('sensor.pokazniki_lichilnika_elektriki_nich') | float / 1000 ) | round(1) }}"
+      icon_template: mdi:counter
+      unit_of_measurement: 'kWh'
+      device_class: energy
+
+

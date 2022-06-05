@@ -1,0 +1,18 @@
+# Люди
+person.vit:
+  go_out: вийшов
+  go_in: прийшов
+person.olena:
+  go_out: вийшла
+  go_in: прийшла
+    # Зоны
+zone.home:
+  friendly_name: ДОМ
+  out_name: з ДОМУ
+  in_name: до ДОМУ
+# Классы устройств к сенсорам
+sensor.spozhivannia_vodi:
+  device_class: gas
+sensor.spozhivannia_gazu:
+  device_class: gas
+  

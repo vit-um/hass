@@ -1,0 +1,24 @@
+utility_meter:
+  automation:
+  - id: 'zmina_taryfiv_electryky'
+    alias: Зміна тарифів для лічильників електрики
+    trigger:
+      - platform: time
+        at: "07:00:00"
+        variables:
+          tariff: "день"
+      - platform: time
+        at: "23:00:00"
+        variables:
+          tariff: "ніч"
+    action:
+      - service: select.select_option
+        target:
+          entity_id: select.spozhivan_elektriki
+        data:
+          option: "{{ tariff }}"
+      - service: select.select_option
+        target:
+          entity_id: select.pokazniki_lichilnika_elektriki
+        data:
+          option: "{{ tariff }}"

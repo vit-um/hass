@@ -127,12 +127,6 @@ telegram:
             event_type: telegram_callback
             event_data:
                data: '/counters'
-          - platform: time
-            at: "19:00:00"
-          condition:
-            condition: template
-            value_template: >
-              {{ now().day == 23 }}  
           action:
           - service: notify.telegram_gr
             data:
@@ -145,6 +139,27 @@ telegram:
                 🚰 Счетчик воды:  {{ states ('sensor.water_counter') }} м3
                 ➖➖➖➖➖➖➖➖➖➖➖➖
 
+        - id: counters25
+          alias: Сообщить показания счетчиков до 25 
+          initial_state: true
+          trigger:
+          - platform: time
+            at: "19:00:00"
+          condition:
+            condition: template
+            value_template: >
+              {{ now().day == 23 }}  
+          action:
+          - service: notify.telegram_gr
+            data:
+              title: '*Не забуть передать показатели счетчиков в водоканал:*'
+              message: |
+                ➖➖➖➖➖➖➖➖➖➖➖➖
+                ⚡ Электричество день: {{ states ('sensor.electric_day') }} кВтч
+                ⚡ Электричество ночь: {{ states ('sensor.electric_night') }} кВтч
+                🔥 Счетчик газа:  {{ states ('sensor.gas_counter') }} м3
+                🚰 Счетчик воды:  {{ states ('sensor.water_counter') }} м3
+                ➖➖➖➖➖➖➖➖➖➖➖➖
 
         - id: telegram_keyboard
           alias: Клавиатура телеграмм бота

@@ -8,6 +8,8 @@
 При фіксації руху у приміщені датчиком, таймер починає відлік с початку. Вимикання світла виконується по завершенню відліку. В прикладі задається час відліку на таймері 5 хвилин.  
 3. Енергомоніторінг на базі вбудованої інформаційної панелі Енергія  
 ![energy](/img/um_energy.jpg)  
+Докладніше про налаштування енергомоніторінку дивіться у [Wiki](https://github.com/vit-um/hass/wiki/6.-Configure-Home-Assistant-Energy-Dashboard)  
+
 
 <p align="left">
 <a  href="https://github.com/vit-um/hass/wiki" target="_blank" rel="next">

@@ -9,6 +9,8 @@
 3. Енергомоніторінг на базі вбудованої інформаційної панелі Енергія  
 ![energy](/img/um_energy.jpg)  
 Докладніше про налаштування енергомоніторінку дивіться у відповідному розділі [Wiki](https://github.com/vit-um/hass/wiki/6.-Configure-Home-Assistant-Energy-Dashboard)  
+4. Автоматизація провітрюівання у ванній кімнаті після приймання душу
+![fan](/img/bath_fan.jpg)  
 
 
 <p align="left">

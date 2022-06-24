@@ -1,0 +1,138 @@
+# Автоматизація керування вентиляцією та провітрюванням
+fan_auto:
+  automation:
+  - id: ventilation_bath_on
+    alias: Проветрить ванну если влажно
+    initial_state: true
+    trigger:
+    - platform: state
+      entity_id: switch.sonoff_1000ce8956
+      from: 'on'
+      to: 'off'
+    - platform: state
+      entity_id: switch.sonoff_1000ce82c8
+      from: unavailable
+      to: 'off'
+    condition: '{{ (states.sensor.bath_humidity.state | int ) - (states.sensor.sonoff_1000bed42e_humidity.state
+      | int) > 10}}'
+    action:
+    - service: switch.turn_on
+      data:
+        entity_id: switch.sonoff_1000ce82c8
+    - service: notify.telegram_gr
+      data:
+        title: '*Вытяжка включена*'
+        message: '💧 Влажность в ванной: {{ states(''sensor.bath_humidity'') }}%.
+
+          💦 Дельта влажности с залом составила: {{ (states.sensor.bath_humidity.state
+          | int ) - (states.sensor.sonoff_1000bed42e_humidity.state | int) }}%'
+    mode: single
+
+  - id: ventilation_bath_off
+    alias: Выключить вентиляцию по заданному значению влажности
+    trigger:
+    - platform: template
+      value_template: '{{ (states.sensor.bath_humidity.state | int ) - (states.sensor.sonoff_1000bed42e_humidity.state
+        | int) < 10}}'
+    condition:
+    - condition: state
+      entity_id: switch.sonoff_1000ce82c8
+      state: 'on'
+    action:
+    - service: switch.turn_off
+      data:
+        entity_id: switch.sonoff_1000ce82c8
+    - service: notify.telegram_gr
+      data:
+        title: '*Вытяжка выключена*'
+        message: '💧 Влажность в ванной востановлена: {{ states(''sensor.bath_humidity'')
+          }}%.
+
+          💦 Дельта влажности с залом составила: {{ (states.sensor.bath_humidity.state
+          | int ) - (states.sensor.sonoff_1000bed42e_humidity.state | int) }}%'
+    mode: single
+
+  - id: ventilation_on
+    alias: Проветрить квартиру
+    initial_state: true
+    trigger:
+    - platform: numeric_state
+      entity_id: sensor.co2_co2
+      above: 1000
+    condition:
+    - condition: state
+      entity_id: switch.sonoff_1000ce8977
+      state: 'off'
+    - condition: state
+      entity_id: input_boolean.auto_fan_on_off
+      state: 'on'
+    action:
+    - service: switch.turn_on
+      data:
+        entity_id: switch.sonoff_1000ce8977
+    - service: notify.telegram_gr
+      data:
+        title: '*Включена приточная вентиляция*'
+        message: '🎐 Не хватает кислорода. Уровень СО2: {{ states(''sensor.co2_co2'')
+          }} ppm.'
+    mode: single
+
+  - id: ventilation_on_if_need
+    alias: Проверить СО2 при включении автоматической вентиляции
+    initial_state: true
+    trigger:
+    - platform: state
+      entity_id: input_boolean.auto_fan_on_off
+      to: 'on'
+    condition:
+    - condition: state
+      entity_id: switch.sonoff_1000ce8977
+      state: 'off'
+    - condition: numeric_state
+      entity_id: sensor.co2_co2
+      above: 1000
+    action:
+    - service: switch.turn_on
+      data:
+        entity_id: switch.sonoff_1000ce8977
+    - service: notify.telegram_gr
+      data:
+        title: '*Включена приточная вентиляция*'
+        message: '🎐 Не хватает кислорода. Уровень СО2: {{ states(''sensor.co2_co2'') }} ppm.'
+    mode: single
+
+  - id: ventilation_off
+    alias: Выключить приточную вентиляцию
+    initial_state: true
+    trigger:
+    - platform: numeric_state
+      entity_id: sensor.co2_co2
+      below: 900
+    condition:
+    - condition: state
+      entity_id: switch.sonoff_1000ce8977
+      state: 'on'
+    action:
+    - service: switch.turn_off
+      data:
+        entity_id: switch.sonoff_1000ce8977
+    - service: notify.telegram_gr
+      data:
+        title: '*Приточная вентиляция отключена*'
+        message: '💨 Уровень СО2: {{ states(''sensor.co2_co2'') }} ppm.'
+    mode: single
+    
+  - id: turn_on_fan_double_click
+    alias: Включить проветривание на 40 минут при двойном нажатии кнопки
+    initial_state: true
+    trigger:
+    - platform: state
+      entity_id: sensor.mi_switch_click
+      to: double
+    action:
+    - service: fan.turn_on
+      entity_id: all
+    - delay: 00:40:00
+    - service: fan.turn_off
+      entity_id: all
+    mode: single

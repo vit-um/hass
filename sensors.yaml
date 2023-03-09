@@ -72,4 +72,223 @@
       unit_of_measurement: 'kWh'
       device_class: energy
 
+# Сенсор лічильника електрики "на" та "з" АКБ
+- platform: template
+  sensors:
+    akb_in:
+      friendly_name: 'Лічильник заряду АКБ'
+      value_template: "{{ (states('sensor.pzem_dc_val5_l2') | float (default=0) ) * (states('binary_sensor.grid_contact') != 'on' )  }}"
+      icon_template: mdi:battery-arrow-up
+      unit_of_measurement: 'Wh'
+      device_class: energy
+    akb_out:
+      friendly_name: 'Лічильник розряду АКБ'
+      value_template: >
+        {% set valWh = ((states('sensor.pzem_dc_val5_l2') | float (default=0) ) 
+        * (states('binary_sensor.grid_contact') != 'off' )) %}
+        {{ valWh }} 
+      icon_template: >
+        {% set valWh = ((states('sensor.pzem_dc_val5_l2') | float (default=0)) 
+        * (states('binary_sensor.grid_contact') != 'off' )) %}
+        {% if valWh %}
+          {% if valWh <= 240 %}
+            mdi:battery
+          {% elif valWh <= 240.0 %}
+            mdi:battery-90
+          {% elif valWh <= 480.0 %}
+            mdi:battery-80
+          {% elif valWh <= 720.0 %}
+            mdi:battery-70
+          {% elif valWh <= 960.0 %}
+            mdi:battery-60
+          {% elif valWh <= 1200.0 %}
+            mdi:battery-50
+          {% elif valWh <= 1440.0 %}
+            mdi:battery-40
+          {% elif valWh <= 1680.0 %}
+            mdi:battery-30
+          {% elif valWh <= 1920.0 %}
+            mdi:battery-20
+          {% else %}
+            mdi:battery-arrow-down-outline
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: 'Wh'
+      device_class: energy
+    dc_energy:
+      friendly_name: 'Енергія АКБ'
+      value_template: "{{ states('sensor.pzem_dc_val5_l2') | float (default=0) }}"
+      icon_template: mdi:battery-arrow-down-outline
+      unit_of_measurement: 'Wh'
+      device_class: energy
+    dc_voltage:
+      friendly_name: 'Напруга АКБ'
+      value_template: "{{ (states('sensor.pzem_dc_val1_l2') | float (default=0) ) / 100 | float(0) }}"
+      unit_of_measurement: 'V'
+      device_class: voltage
+    dc_current:
+      friendly_name: 'Струм АКБ'
+      value_template: "{{ (states('sensor.pzem_dc_val2_l2') | float (default=0) ) / 100 | float(0) }}"
+      unit_of_measurement: 'A'
+      device_class: current
+    dc_power:
+      friendly_name: 'Потужність АКБ'
+      value_template: "{{ (states('sensor.pzem_dc_val3_l2') | float (default=0) ) / 10 | float(0) }}"
+      unit_of_measurement: 'W'
+      device_class: power
+    akb_in_w:
+      friendly_name: 'Потужність заряду АКБ'
+      value_template: "{{ (states('sensor.pzem_dc_val3_l2') | float (default=0) ) / 10 * (states('binary_sensor.grid_contact') == 'off' )  }}"
+      icon_template: mdi:battery-arrow-up
+      unit_of_measurement: 'W'
+      device_class: power
+    akb_out_w:
+      friendly_name: 'Потужність розряду АКБ'
+      value_template: "{{ (states('sensor.pzem_dc_val3_l2') | float (default=0) ) / 10 * (states('binary_sensor.grid_contact') == 'on' ) }}"
+      icon_template: mdi:battery-arrow-down-outline
+      unit_of_measurement: 'W'
+      device_class: power
 
+
+################# Сенсори споживання по кімнатах #################
+- platform: template
+  sensors:
+    kitchen_total_load:
+      friendly_name: 'Cпоживання по кухні'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{states('sensor.electric_oven_power_l2') | float (default=0) 
+                + states('sensor.sonoff_1000bd7bf9_power') | float (default=0) 
+                + states('sensor.pg_fridge_power') | float (default=0) 
+                + states('sensor.pg_filter_power') | float (default=0) 
+                + states('sensor.power_light_kitchen') | float (default=0)
+                }}
+    hall_total_load:
+      friendly_name: 'Cпоживання вітальні'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{ states('sensor.plug_zb_power') | float (default=0)
+                + states('sensor.sw_fan_power') | float (default=0) 
+                + states('sensor.power_light_hall') | float (default=0)
+                + states('sensor.power_tv') | float (default=0)
+                }}
+    br_total_load:
+      friendly_name: 'Cпоживання спальної'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{states('sensor.sonoff_1000bd7d2c_power')|float (default=0)
+                + states('sensor.pg_lena_note_power')|float (default=0) 
+                + states('sensor.power_light_br')|float (default=0) }}
+    ch_total_load:
+      friendly_name: 'Cпоживання дитячої'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{states('sensor.pg_mat_alex_power')|float (default=0)
+                + states('sensor.pg_alex_note_power')|float (default=0) 
+                + states('sensor.power_light_ch')|float (default=0)  }}
+    klumba_total_load:
+      friendly_name: 'Споживання клумби'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{states('sensor.sonoff_10008548e7_power')|float (default=0)
+                + states('sensor.power_light_klumba')|float (default=0) }}
+    wc_total_load:
+      friendly_name: 'Споживання санвузла'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{states('sensor.sonoff_1000bd8c01_power')|float (default=0)
+                + states('sensor.plug_towel_power')|float (default=0)
+                + states('sensor.power_light_wc')|float (default=0)
+                }}
+    ext_total_load:
+      friendly_name: 'Зовнішні споживачі та коридор'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{states('sensor.electric_meter_power_l2')|float (default=0) 
+                + states('sensor.pg_ups_power')|float (default=0) 
+                + states('sensor.power_light_ext')|float (default=0) 
+                }}
+    cond_total_load:
+      friendly_name: 'Кондиціонери'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{states('sensor.sonoff_1000854997_power')|float (default=0)
+                + states('sensor.sonoff_1000bd7d2c_power') | float (default=0) }}
+    power_light_hall:
+      friendly_name: 'Світло в залі'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{ is_state('light.sonoff_100101549d_2', 'on') * float(10 * 4) 
+                + is_state('light.sonoff_100101549d_1', 'on') * float(10 * 4) 
+                + is_state('light.wled_hall', 'on') * float(10) 
+                }}
+    power_light_br:
+      friendly_name: 'Світло в спальні'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{ is_state('light.sonoff_1000e800ac_1', 'on') * float(6 * 2) 
+                + is_state('light.sonoff_1000e800ac_2', 'on') * float(6 * 4) 
+                + is_state('light.sonoff_1000c9d76c', 'on') * float(30 * 2)
+                + is_state('light.wled_br', 'on') * float(10)
+                }}
+    power_light_ch:
+      friendly_name: 'Світло в дитячій'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{ is_state('light.child_room_right', 'on') * float(7 * 5) 
+                + is_state('light.child_room_center', 'on') * float(3 * 1) 
+                + is_state('light.alex_wled_2', 'on') * float(10)
+                + is_state('light.sonoff_1000990c0c', 'on') * float(5)
+                + is_state('light.sonoff_1000c8bee6', 'on') * float(7 * 1)
+                }}
+    power_light_kitchen:
+      friendly_name: 'Світло в кухні'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{ is_state('light.sonoff_1000ce7bb5', 'on') * float(9 * 7) 
+                + is_state('light.gateway_light_7c49ebb42515', 'on') * float(3 * 1) }}
+    power_light_wc:
+      friendly_name: 'Світло у ванній'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{ is_state('light.sonoff_1000ce8956', 'on') * float(10 * 2) 
+                + is_state('light.zbmini_bath', 'on') * float(3 * 2) }}
+    power_light_ext:
+      friendly_name: 'Світло у коридорі'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{ is_state('light.sonoff_1000e7ffae_1', 'on') * float(10 + 7)
+                + is_state('light.sonoff_1000e7ffae_2', 'on') * float(14) 
+                + is_state('light.wled', 'on') * float(5) 
+                }}
+    power_light_klumba:
+      friendly_name: 'Світло на клумбі'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{ is_state('light.sonoff_100086c57d_1', 'on') * float(12 * 2)
+                + is_state('light.sonoff_100086c57d_2', 'on') * float(15 * 3)
+                + is_state('light.klumba_red', 'on') * float(8 * 3) 
+                }}
+    power_tv:
+      friendly_name: 'Телевізор'
+      unit_of_measurement: 'W'
+      device_class: power
+      value_template: >
+                {{ (is_state('switch.sonoff_1000bed42e', 'on') 
+                and not is_state('media_player.chromecast8059', 'off')) * float(110) 
+                }}        

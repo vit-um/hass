@@ -1,4 +1,27 @@
-utility_meter:
+utilitymeter:
+
+  utility_meter:
+    spozhivan_elektriki:
+      source: sensor.sonoff_10016fd81a_energy
+      name: Споживання електрики
+      cycle: daily
+      tariffs:
+        - день
+        - ніч
+    pokazniki_lichilnika_elektriki:
+      source: sensor.sonoff_10016fd81a_energy
+      name: Показники лічильника електрики
+      tariffs:
+        - день
+        - ніч
+    battery_energy:
+      source: sensor.pzem_dc_val5_l2
+      name: Енергія АКБ
+      cycle: monthly
+      tariffs:
+        - заряд
+        - розряд
+
   automation:
   - id: 'zmina_taryfiv_electryky'
     alias: Зміна тарифів для лічильників електрики
@@ -22,3 +45,24 @@ utility_meter:
           entity_id: select.pokazniki_lichilnika_elektriki
         data:
           option: "{{ tariff }}"
+  - alias: Зміна напрямку енергії АКБ
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.grid_contact
+        from: 'off'
+        to: 'on'
+        variables:
+          tariff: "розряд"
+      - platform: state
+        entity_id: binary_sensor.grid_contact
+        from: 'on'
+        to: 'off'
+        variables:
+          tariff: "заряд"
+    action:
+      - service: select.select_option
+        target:
+          entity_id: select.battery_energy
+        data:
+          option: "{{ tariff }}"
+

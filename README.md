@@ -24,6 +24,7 @@
 - Доступні налаштування пристрою через конвертор:   
 ![fan](/img/h_ps_sensor_exp.jpg)  
 - Остання редакція коду конвертора [тут](/zigbee2mqtt/tuya_h_pr.js).
+- А тут [з чого все починалось](https://github.com/Koenkk/zigbee-herdsman-converters/issues/5930)  
 
 
 <p align="left">

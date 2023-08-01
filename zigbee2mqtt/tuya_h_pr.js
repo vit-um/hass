@@ -55,7 +55,7 @@ const definition = {
 			[104, 'illuminance_lux', tuya.valueConverter.divideBy10],
 			[105, 'entry_sensitivity', tuya.valueConverter.raw],
 			[106, 'entry_distance_indentation', tuya.valueConverter.divideBy100],
-			[107, 'breaker_mode', tuya.valueConverterBasic.lookup({'standard': tuya.enum(0), 'local': tuya.enum(1),'mandatory': tuya.enum(2),'not support': tuya.enum(2)})],
+			[107, 'breaker_mode', tuya.valueConverterBasic.lookup({'standard': tuya.enum(0), 'local': tuya.enum(1),'mandatory': tuya.enum(2),'not support': tuya.enum(3)})],
 			[108, 'breaker_status', tuya.valueConverter.trueFalse1], 
 			[109, 'status_indication', tuya.valueConverterBasic.lookup({'OFF': tuya.enum(0), 'ON': tuya.enum(1)})],
 			[110, 'illumin_threshold', tuya.valueConverter.divideBy10],

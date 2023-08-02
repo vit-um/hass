@@ -13,7 +13,7 @@ const ea = exposes.access;
 
 const tzDatapoints = {
     ...tuya.tz.datapoints,
-    key: [...tuya.tz.datapoints.key, 'radar_sensitivity', 'entry_sensitivity', 'illumin_threshold', 'detection_range','shield_range','entry_distance_indentation','entry_filter_time','departure_delay','block_time', 'breaker_polarity', 'status_indication','breaker_mode','breaker_status']
+    key: [...tuya.tz.datapoints.key, 'radar_sensitivity', 'entry_sensitivity', 'illumin_threshold', 'detection_range','shield_range','entry_distance_indentation','entry_filter_time','departure_delay','block_time', 'breaker_polarity', 'status_indication','breaker_mode']
 }
 
 const definition = {
@@ -36,8 +36,8 @@ const definition = {
 		e.numeric('entry_filter_time', ea.STATE_SET).withValueMin(0).withValueMax(10).withValueStep(0.1).withUnit('sec').withDescription('Entry filter time'),
 		e.numeric('departure_delay', ea.STATE_SET).withValueMin(0).withValueMax(100).withValueStep(1).withUnit('sec').withDescription('Turn off delay'),
 		e.numeric('block_time', ea.STATE_SET).withValueMin(0).withValueMax(10).withValueStep(0.1).withUnit('sec').withDescription('Block time'),
-		e.enum('breaker_mode', ea.STATE_SET, ['standard', 'local']).withDescription('Status Breaker mode'),
-		e.binary('breaker_status', ea.STATE_SET, 'ON', 'OFF').withDescription('Breaker status changes with breaker_mode->external'),
+		e.enum('breaker_mode', ea.STATE_SET, ['standard', 'local', 'mandatory', 'not support']).withDescription('Status Breaker mode'),
+		e.binary('breaker_status', ea.STATE).withDescription('Breaker status'),
 		e.enum('status_indication', ea.STATE_SET, ['OFF', 'ON']).withDescription('Status indication'),
 		e.enum('breaker_polarity', ea.STATE_SET, ['NC', 'NO']).withDescription('Breaker polarity'),
     ],
@@ -55,8 +55,8 @@ const definition = {
 			[104, 'illuminance_lux', tuya.valueConverter.divideBy10],
 			[105, 'entry_sensitivity', tuya.valueConverter.raw],
 			[106, 'entry_distance_indentation', tuya.valueConverter.divideBy100],
-			[107, 'breaker_mode', tuya.valueConverterBasic.lookup({'standard': tuya.enum(0), 'local': tuya.enum(1)})],
-			[108, 'breaker_status', tuya.valueConverterBasic.lookup({'OFF': tuya.enum(0), 'ON': tuya.enum(1)})],
+			[107, 'breaker_mode', tuya.valueConverterBasic.lookup({'standard': tuya.enum(0), 'local': tuya.enum(1),'mandatory': tuya.enum(2),'not support': tuya.enum(3)})],
+			[108, 'breaker_status', tuya.valueConverter.trueFalse1], 
 			[109, 'status_indication', tuya.valueConverterBasic.lookup({'OFF': tuya.enum(0), 'ON': tuya.enum(1)})],
 			[110, 'illumin_threshold', tuya.valueConverter.divideBy10],
 			[111, 'breaker_polarity', tuya.valueConverterBasic.lookup({'NC': tuya.enum(0), 'NO': tuya.enum(1)})],
